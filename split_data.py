@@ -46,7 +46,7 @@ def split_data(images_dir, response_file, output_base_dir, train_ratio=0.7, vali
     train_ids, temp_ids = train_test_split(
         filtered_df['id'].values, 
         train_size=train_ratio,
-        random_state=42
+        random_state=422
     )
     
     # Then split temporary set into validation and test sets
@@ -54,7 +54,7 @@ def split_data(images_dir, response_file, output_base_dir, train_ratio=0.7, vali
     valid_ids, test_ids = train_test_split(
         temp_ids,
         train_size=valid_ratio_adjusted,
-        random_state=42
+        random_state=422
     )
     
     print(f"Training set size: {len(train_ids)} ({len(train_ids)/len(valid_ids):.1%})")

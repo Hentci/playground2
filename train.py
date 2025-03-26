@@ -170,7 +170,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
     
     return model, history
 
-# Function to identify outliers
+# Function to identify outliers and calculate test MAE
 def analyze_results(model, test_loader, device):
     model.eval()
     
@@ -194,6 +194,14 @@ def analyze_results(model, test_loader, device):
     # Calculate errors
     abs_errors = np.abs(y_pred - y_true)
     
+    # Calculate Test MAE
+    test_mae = np.mean(abs_errors)
+    print(f'\nTest MAE: {test_mae:.4f}')
+    
+    # Calculate Test MSE
+    test_mse = np.mean(np.square(y_pred - y_true))
+    print(f'Test MSE: {test_mse:.4f}')
+    
     # Identify outliers (using statistical threshold)
     threshold = np.mean(abs_errors) + 2 * np.std(abs_errors)
     is_outlier = abs_errors > threshold
@@ -216,7 +224,7 @@ def analyze_results(model, test_loader, device):
     
     results_df.to_csv('prediction_results.csv', index=False)
     
-    return results_df
+    return results_df, test_mae, test_mse
 
 def main():
     # Set base directory
@@ -272,7 +280,26 @@ def main():
     
     # Analyze results and identify potential outliers
     print("\nAnalyzing results...")
-    results_df = analyze_results(model, test_loader, device)
+    results_df, test_mae, test_mse = analyze_results(model, test_loader, device)
+    
+    # 將測試指標加入到history字典中，以便可以與訓練和驗證指標一起保存
+    history['test_mae'] = test_mae
+    history['test_mse'] = test_mse
+    
+    # 儲存所有指標到CSV檔案
+    metrics_df = pd.DataFrame({
+        'final_train_loss': history['train_loss'][-1],
+        'final_val_loss': history['val_loss'][-1],
+        'test_mse': test_mse,
+        'final_train_mae': history['train_mae'][-1],
+        'final_val_mae': history['val_mae'][-1],
+        'test_mae': test_mae
+    }, index=[0])
+    
+    metrics_df.to_csv('model_metrics.csv', index=False)
+    print(f"\nFinal metrics saved to model_metrics.csv")
+    print(f"Final Test MAE: {test_mae:.4f}")
+    print(f"Final Test MSE: {test_mse:.4f}")
     
     # Visualize training history
     plt.figure(figsize=(12, 4))
